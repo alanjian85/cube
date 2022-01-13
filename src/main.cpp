@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <cstdint>
 #include <iostream>
 
 #include <bgfx/bgfx.h>
@@ -9,6 +10,37 @@
 
 const int window_width = 640;
 const int window_height = 480;
+
+struct pos_color_vertex {
+    float x;
+    float y;
+    float z;
+    std::uint32_t abgr;
+    
+    static void init() {
+        layout
+            .begin()
+                .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+                .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+            .end();
+    }
+
+    static bgfx::VertexLayout layout;
+};
+
+bgfx::VertexLayout pos_color_vertex::layout;
+
+static pos_color_vertex cube_vertices[] = {
+    { 0.5f,  0.5f, 0.0f, 0xff0000ff},
+    { 0.5f, -0.5f, 0.0f, 0xff0000ff},
+    {-0.5f, -0.5f, 0.0f, 0xff00ff00},
+    {-0.5f,  0.5f, 0.0f, 0xff00ff00}
+};
+
+static const std::uint16_t cube_tri_list[] = {
+    0, 1, 3,
+    1, 2, 3
+};
 
 int main() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -46,6 +78,19 @@ int main() {
                        BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
                        0x443355FF, 1.0f, 0);
     bgfx::touch(0);
+
+    bgfx::VertexBufferHandle vbh; 
+    bgfx::IndexBufferHandle ibh;
+
+    pos_color_vertex::init();
+    vbh = bgfx::createVertexBuffer(
+        bgfx::makeRef(cube_vertices, sizeof(cube_vertices)),
+        pos_color_vertex::layout
+    );
+
+    ibh = bgfx::createIndexBuffer(
+        bgfx::makeRef(cube_tri_list, sizeof(cube_tri_list))
+    );
 
     bool quit = false;
     while (!quit) {

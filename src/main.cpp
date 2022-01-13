@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <cstdint>
+#include <fstream>
 #include <iostream>
+#include <vector>
 
 #include <bgfx/bgfx.h>
 #include <bgfx/platform.h>
@@ -10,6 +12,21 @@
 
 const int window_width = 640;
 const int window_height = 480;
+
+bgfx::ShaderHandle load_shader(const char* path) {
+    std::ifstream file(path, std::ios::ate);
+    std::vector<char> data;
+    if (file.is_open()) {
+        std::size_t size = file.tellg();
+        data.resize(size);
+        file.seekg(0, std::ios::beg);
+        file.read(data.data(), size);
+    }
+    const bgfx::Memory* memory = bgfx::copy(data.data(), data.size());
+    memory->data[memory->size - 1] = '\0';
+    bgfx::ShaderHandle shader = bgfx::createShader(memory);
+    return shader;
+}
 
 struct pos_color_vertex {
     float x;
@@ -79,18 +96,19 @@ int main() {
                        0x443355FF, 1.0f, 0);
     bgfx::touch(0);
 
-    bgfx::VertexBufferHandle vbh; 
-    bgfx::IndexBufferHandle ibh;
-
     pos_color_vertex::init();
-    vbh = bgfx::createVertexBuffer(
+    bgfx::VertexBufferHandle vbh = bgfx::createVertexBuffer(
         bgfx::makeRef(cube_vertices, sizeof(cube_vertices)),
         pos_color_vertex::layout
     );
 
-    ibh = bgfx::createIndexBuffer(
+    bgfx::IndexBufferHandle ibh = bgfx::createIndexBuffer(
         bgfx::makeRef(cube_tri_list, sizeof(cube_tri_list))
     );
+
+    bgfx::ShaderHandle vsh = load_shader("vs_cube.bin");
+    bgfx::ShaderHandle fsh = load_shader("fs_cube.bin");
+    bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
 
     bool quit = false;
     while (!quit) {

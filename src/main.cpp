@@ -51,15 +51,29 @@ struct pos_color_vertex {
 bgfx::VertexLayout pos_color_vertex::layout;
 
 static pos_color_vertex cube_vertices[] = {
-    { 0.5f,  0.5f, 0.0f, 0xff0000ff},
-    { 0.5f, -0.5f, 0.0f, 0xff0000ff},
-    {-0.5f, -0.5f, 0.0f, 0xff00ff00},
-    {-0.5f,  0.5f, 0.0f, 0xff00ff00}
+    {-1.0f,  1.0f,  1.0f, 0xff000000 },
+    { 1.0f,  1.0f,  1.0f, 0xff0000ff },
+    {-1.0f, -1.0f,  1.0f, 0xff00ff00 },
+    { 1.0f, -1.0f,  1.0f, 0xff00ffff },
+    {-1.0f,  1.0f, -1.0f, 0xffff0000 },
+    { 1.0f,  1.0f, -1.0f, 0xffff00ff },
+    {-1.0f, -1.0f, -1.0f, 0xffffff00 },
+    { 1.0f, -1.0f, -1.0f, 0xffffffff }
 };
 
 static const std::uint16_t cube_tri_list[] = {
-    0, 1, 3,
-    1, 2, 3
+    0, 1, 2,
+    1, 3, 2,
+    4, 6, 5,
+    5, 6, 7,
+    0, 2, 4,
+    4, 2, 6,
+    1, 5, 3,
+    5, 7, 3,
+    0, 4, 1,
+    4, 5, 1,
+    2, 3, 6,
+    6, 3, 7
 };
 
 int main() {
@@ -85,19 +99,21 @@ int main() {
     pd.ndt = wmi.info.x11.display;
     pd.nwh = reinterpret_cast<void*>(wmi.info.x11.window);
     bgfx::setPlatformData(pd);
-    bgfx::renderFrame();
-    
-    if (!bgfx::init()) {
+
+    bgfx::Init init;
+    init.type = bgfx::RendererType::Count;
+    init.resolution.width = window_width;
+    init.resolution.height = window_height;
+    init.resolution.reset = BGFX_RESET_VSYNC;
+    if (!bgfx::init(init)) {
         spdlog::error("Bgfx could not initialize!");
         return EXIT_FAILURE;
     }
-    bgfx::reset(window_width, window_height, BGFX_RESET_VSYNC);
-    bgfx::setDebug(BGFX_DEBUG_TEXT);
+
     bgfx::setViewRect(0, 0, 0, window_width, window_height);
     bgfx::setViewClear(0,
                        BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
                        0x443355FF, 1.0f, 0);
-    bgfx::touch(0);
 
     pos_color_vertex::init();
     bgfx::VertexBufferHandle vbh = bgfx::createVertexBuffer(
@@ -113,6 +129,8 @@ int main() {
     bgfx::ShaderHandle fsh = load_shader("fs_cube.bin");
     bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
 
+    unsigned counter = 0;
+
     bool quit = false;
     while (!quit) {
         SDL_Event event;
@@ -121,43 +139,36 @@ int main() {
                 quit = true;
                 spdlog::info("SDL quitted");
             }
-
-            bgfx::frame();
-
-            bx::Vec3 at = {0.0f, 0.0f, 0.0f};
-            bx::Vec3 eye = {0.0f, 0.0f, 10.0f};
-
-            float view[16];
-            bx::mtxLookAt(view, eye, at);
-
-            float proj[16];
-            bx::mtxProj(proj,
-                        60.0f,
-                        float(window_width) / float(window_height),
-                        0.1f, 100.0f,
-                        bgfx::getCaps()->homogeneousDepth);
-            
-            bgfx::setViewTransform(0, view, proj);
-            bgfx::setViewRect(0, 0, 0, window_width, window_height);
-            bgfx::touch(0);
-
-            float mtx[16];
-            bx::mtxRotateY(mtx, 0.0f);
-
-            mtx[12] = 0.0f;
-            mtx[13] = 0.0f;
-            mtx[14] = 0.0f;
-            bgfx::setTransform(mtx);
-
-            bgfx::setVertexBuffer(0, vbh);
-            bgfx::setIndexBuffer(ibh);
-
-            bgfx::setState(BGFX_STATE_DEFAULT);
-
-            bgfx::submit(0, program);
-            
-            bgfx::frame();
         }
+
+        bgfx::frame();
+
+        bx::Vec3 at = {0.0f, 0.0f, 0.0f};
+        bx::Vec3 eye = {0.0f, 0.0f, 10.0f};
+
+        float view[16];
+        bx::mtxLookAt(view, eye, at);
+
+        float proj[16];
+        bx::mtxProj(proj,
+                    60.0f,
+                    float(window_width) / float(window_height),
+                    0.1f, 100.0f,
+                    bgfx::getCaps()->homogeneousDepth);
+        
+        bgfx::setViewTransform(0, view, proj);
+
+        float mtx[16];
+        bx::mtxRotateXY(mtx, counter * 0.0005f, counter * 0.0005f);
+        bgfx::setTransform(mtx);
+
+        bgfx::setVertexBuffer(0, vbh);
+        bgfx::setIndexBuffer(ibh);
+
+        bgfx::submit(0, program);
+        bgfx::frame();
+
+        ++counter;
     }
 
     bgfx::shutdown();

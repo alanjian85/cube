@@ -144,7 +144,7 @@ int main() {
         bgfx::frame();
 
         bx::Vec3 at = {0.0f, 0.0f, 0.0f};
-        bx::Vec3 eye = {0.0f, 0.0f, 10.0f};
+        bx::Vec3 eye = {0.0f, 0.0f, -5.0f};
 
         float view[16];
         bx::mtxLookAt(view, eye, at);

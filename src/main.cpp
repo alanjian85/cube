@@ -9,6 +9,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
 #include <spdlog/spdlog.h>
+#include <bx/math.h>
 
 const int window_width = 640;
 const int window_height = 480;
@@ -121,6 +122,40 @@ int main() {
                 spdlog::info("SDL quitted");
             }
 
+            bgfx::frame();
+
+            bx::Vec3 at = {0.0f, 0.0f, 0.0f};
+            bx::Vec3 eye = {0.0f, 0.0f, 10.0f};
+
+            float view[16];
+            bx::mtxLookAt(view, eye, at);
+
+            float proj[16];
+            bx::mtxProj(proj,
+                        60.0f,
+                        float(window_width) / float(window_height),
+                        0.1f, 100.0f,
+                        bgfx::getCaps()->homogeneousDepth);
+            
+            bgfx::setViewTransform(0, view, proj);
+            bgfx::setViewRect(0, 0, 0, window_width, window_height);
+            bgfx::touch(0);
+
+            float mtx[16];
+            bx::mtxRotateY(mtx, 0.0f);
+
+            mtx[12] = 0.0f;
+            mtx[13] = 0.0f;
+            mtx[14] = 0.0f;
+            bgfx::setTransform(mtx);
+
+            bgfx::setVertexBuffer(0, vbh);
+            bgfx::setIndexBuffer(ibh);
+
+            bgfx::setState(BGFX_STATE_DEFAULT);
+
+            bgfx::submit(0, program);
+            
             bgfx::frame();
         }
     }

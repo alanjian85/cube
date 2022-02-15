@@ -129,8 +129,6 @@ int main() {
     bgfx::ShaderHandle fsh = load_shader("fs_cube.bin");
     bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
 
-    unsigned counter = 0;
-
     bool quit = false;
     while (!quit) {
         SDL_Event event;
@@ -159,7 +157,7 @@ int main() {
         bgfx::setViewTransform(0, view, proj);
 
         float mtx[16];
-        bx::mtxRotateXY(mtx, counter * 0.0005f, counter * 0.0005f);
+        bx::mtxRotateXY(mtx, SDL_GetTicks() * 0.0025f, SDL_GetTicks() * 0.0025f);
         bgfx::setTransform(mtx);
 
         bgfx::setVertexBuffer(0, vbh);
@@ -167,8 +165,6 @@ int main() {
 
         bgfx::submit(0, program);
         bgfx::frame();
-
-        ++counter;
     }
 
     bgfx::shutdown();

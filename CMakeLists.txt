@@ -12,7 +12,6 @@ include(BgfxHelper)
 bgfx_add_shaders(cube)
 
 find_package(SDL2 REQUIRED)
-find_package(spdlog REQUIRED)
 find_package(bgfx REQUIRED)
 
 target_include_directories(cube PRIVATE
@@ -20,5 +19,4 @@ target_include_directories(cube PRIVATE
 
 target_link_libraries(cube PRIVATE
     ${SDL2_LIBRARIES}
-    spdlog::spdlog
     bgfx::bgfx)

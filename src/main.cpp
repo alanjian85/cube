@@ -8,7 +8,6 @@
 #include <bgfx/platform.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
-#include <spdlog/spdlog.h>
 #include <bx/math.h>
 
 const int window_width = 640;
@@ -17,14 +16,10 @@ const int window_height = 480;
 bgfx::ShaderHandle load_shader(const char* path) {
     std::ifstream file(path, std::ios::ate);
     std::vector<char> data;
-    if (file.is_open()) {
-        std::size_t size = file.tellg();
-        data.resize(size);
-        file.seekg(0, std::ios::beg);
-        file.read(data.data(), size);
-    } else {
-        spdlog::error("File at {} could not be opened!", path);
-    }
+    std::size_t size = file.tellg();
+    data.resize(size);
+    file.seekg(0, std::ios::beg);
+    file.read(data.data(), size);
     const bgfx::Memory* memory = bgfx::copy(data.data(), data.size());
     memory->data[memory->size - 1] = '\0';
     bgfx::ShaderHandle shader = bgfx::createShader(memory);
@@ -77,23 +72,12 @@ static const std::uint16_t cube_tri_list[] = {
 };
 
 int main() {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        spdlog::error("SDL could not initialize! SDL Error: {}", SDL_GetError());
-        return EXIT_FAILURE;
-    }
-
+    SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("Cube", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, SDL_WINDOW_SHOWN);
-    if (window == nullptr) {
-        spdlog::error("Window could not be created! SDL Error: {}", SDL_GetError());
-        return EXIT_FAILURE;
-    }
 
     SDL_SysWMinfo wmi;
     SDL_VERSION(&wmi.version);
-    if (!SDL_GetWindowWMInfo(window, &wmi)) {
-        spdlog::error("Window WMI info could not be fetched! SDL Error: {}", SDL_GetError());
-        return EXIT_FAILURE;
-    }
+    SDL_GetWindowWMInfo(window, &wmi);
 
     bgfx::PlatformData pd;
     pd.ndt = wmi.info.x11.display;
@@ -105,10 +89,7 @@ int main() {
     init.resolution.width = window_width;
     init.resolution.height = window_height;
     init.resolution.reset = BGFX_RESET_VSYNC;
-    if (!bgfx::init(init)) {
-        spdlog::error("Bgfx could not initialize!");
-        return EXIT_FAILURE;
-    }
+    bgfx::init(init);
 
     bgfx::setViewRect(0, 0, 0, window_width, window_height);
     bgfx::setViewClear(0,

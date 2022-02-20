@@ -85,7 +85,7 @@ int main() {
     bgfx::setPlatformData(pd);
 
     bgfx::Init init;
-    init.type = bgfx::RendererType::Count;
+    init.type = bgfx::RendererType::OpenGL;
     init.resolution.width = window_width;
     init.resolution.height = window_height;
     init.resolution.reset = BGFX_RESET_VSYNC;
@@ -116,7 +116,6 @@ int main() {
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
                 quit = true;
-                spdlog::info("SDL quitted");
             }
         }
 
